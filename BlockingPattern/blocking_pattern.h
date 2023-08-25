@@ -14,7 +14,7 @@ class BlockingPattern {}; // Default specialisation
 template <class T> // Specialisation to integral types
 class BlockingPattern<T, typename enable_if<is_integral<T>::value>::type> {
     public:
-        T h, w;
+        T h, w, max_x, max_y, n_pos, n_clauses;
 
         explicit BlockingPattern(string patternString, T n) {
             black_pattern = new vector<function<T(T, T)>>();
@@ -23,7 +23,7 @@ class BlockingPattern<T, typename enable_if<is_integral<T>::value>::type> {
             h = 0;
             w = 0;
 
-            T pos;
+            size_t pos;
             string token;
 
             while ((pos = patternString.find('\n')) != string::npos) {
@@ -32,9 +32,31 @@ class BlockingPattern<T, typename enable_if<is_integral<T>::value>::type> {
             }
 
             _ingest_token(patternString, n);
+
+            max_x = n - w + 1;
+            max_y = n - h + 1;
+            n_pos = max_x * max_y;
+            n_clauses = n_pos * white_pattern->size();
         }
 
-//    private:
+    vector<T>* getLiterals(T c) {
+        auto k = (T) c / n_pos;
+        auto c_k = c - (k * n_pos);
+
+        auto y = (T) c_k / w;
+        auto x = c_k - (y * w);
+
+        auto literals = new vector<T>();
+        for (auto f : *black_pattern) {
+            literals->push_back(f(x, y));
+        }
+
+        literals->push_back(white_pattern->at(k)(x, y));
+
+        return literals;
+    }
+
+    private:
         vector<function<T(T, T)>>* black_pattern;
         vector<function<T(T, T)>>* white_pattern;
 
