@@ -43,10 +43,10 @@ class BlockingPattern<T, typename enable_if<is_integral<T>::value>::type> {
         auto k = (T) c / n_pos;
         auto c_k = c - (k * n_pos);
 
-        auto y = (T) c_k / w;
-        auto x = c_k - (y * w);
+        auto y = (T) c_k / max_y;
+        auto x = c_k - (y * max_y);
 
-        auto literals = new vector<T>();
+        auto literals = new vector<T>;
         for (auto f : *black_pattern) {
             literals->push_back(f(x, y));
         }
@@ -66,8 +66,7 @@ class BlockingPattern<T, typename enable_if<is_integral<T>::value>::type> {
 
             for (auto c : token) {
                 switch(c) {
-                    case '*': break;
-                    case 'b': {
+                    case '1': {
                         black_pattern->push_back(
                                 [_h, _w, n](int x, int y) {
                                     return 2 * (n * (y + _h) + x + _w) + 1;
@@ -76,7 +75,7 @@ class BlockingPattern<T, typename enable_if<is_integral<T>::value>::type> {
 
                         break;
                     }
-                    case 'w': {
+                    case '0': {
                         white_pattern->push_back(
                                 [_h, _w, n](int x, int y) {
                                     return 2 * (n * (y + _h) + x + _w);

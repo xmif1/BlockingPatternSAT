@@ -3,17 +3,11 @@ project(BlockingPatternSAT)
 
 set(CMAKE_CXX_STANDARD 14)
 
-find_package(OpenMP)
-if(OPENMP_FOUND)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-endif()
-
 find_package(ALLLSatisfiabilitySolver CONFIG REQUIRED)
 
 add_executable(BlockingPatternSAT main.cpp
-        BlockingPattern/generator.h
+        BlockingPattern/clause_generator.h
         BlockingPattern/blocking_pattern.h)
-target_link_libraries(BlockingPatternSAT OpenMP::OpenMP_CXX ALLLSatisfiabilitySolver)
+target_link_libraries(BlockingPatternSAT curses ALLLSatisfiabilitySolver)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0") # to specify compiler optimisations add -Ofast -DNDEBUG
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Ofast -DNDEBUG") # to specify compiler optimisations add -Ofast -DNDEBUG
