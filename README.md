@@ -2,8 +2,6 @@
 
 Alpha Release Version
 
----
-
 ### What are '_blocking patterns_'? 
 
 Suppose that you have an _n_ x _n_ grid of cells, where each cell must be coloured either _black_ or _white_. 
@@ -36,8 +34,6 @@ Considering a _16_ x _16_ grid and applying the two complementary blocking patte
 we get the following valid cell colouring:
 
 <p align="center"><img src="example.png" width=250 height=250></p>
-
----
 
 ### Installation
 
