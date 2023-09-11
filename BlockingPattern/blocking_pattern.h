@@ -8,6 +8,7 @@
 #include <string>
 
 using namespace std;
+
 template<class T, class Enable = void>
 class BlockingPattern {}; // Default specialisation
 
@@ -33,8 +34,8 @@ class BlockingPattern<T, typename enable_if<is_integral<T>::value>::type> {
 
             _ingest_token(patternString, n);
 
-            max_x = n - w + 1;
-            max_y = n - h + 1;
+            max_x = n;
+            max_y = n;
             n_pos = max_x * max_y;
             n_clauses = n_pos * white_pattern->size();
         }
@@ -69,7 +70,7 @@ class BlockingPattern<T, typename enable_if<is_integral<T>::value>::type> {
                     case '1': {
                         black_pattern->push_back(
                                 [_h, _w, n](int x, int y) {
-                                    return 2 * (n * (y + _h) + x + _w) + 1;
+                                    return 2 * (n * ((y + _h) % n) + ((x + _w) % n)) + 1;
                                 }
                         );
 
@@ -78,12 +79,13 @@ class BlockingPattern<T, typename enable_if<is_integral<T>::value>::type> {
                     case '0': {
                         white_pattern->push_back(
                                 [_h, _w, n](int x, int y) {
-                                    return 2 * (n * (y + _h) + x + _w);
+                                    return 2 * (n * ((y + _h) % n) + ((x + _w) % n));
                                 }
                         );
 
                         break;
                     }
+                    case '*': break;
                     default:
                         exit(1);
                 }

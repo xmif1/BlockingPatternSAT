@@ -6,7 +6,6 @@ set(CMAKE_CXX_STANDARD 14)
 find_package(ALLLSatisfiabilitySolver CONFIG REQUIRED)
 
 add_executable(BlockingPatternSAT main.cpp
-        BlockingPattern/clause_generator.h
         BlockingPattern/blocking_pattern.h)
 target_link_libraries(BlockingPatternSAT curses ALLLSatisfiabilitySolver)
 

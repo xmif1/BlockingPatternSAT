@@ -1,6 +1,5 @@
 
 #include "BlockingPattern/blocking_pattern.h"
-#include "BlockingPattern/clause_generator.h"
 
 #include "SATInstance.h"
 
@@ -9,85 +8,60 @@ typedef SATInstance<UINT_T>::ClauseArray ClauseArray;
 typedef unsigned char byte;
 
 void bits_to_bmp(VariablesArray<UINT_T>* data, UINT_T n, char* out);
+Clause<UINT_T>* getEnumeratedClause(UINT_T, unsigned short int);
+
+auto blocking_patterns = new vector<BlockingPattern<UINT_T>*>();
 
 int main() {
+    unsigned short int n_threads = 1;
     UINT_T n = 64;
+    UINT_T n_clauses = 0;
     UINT_T batch_size = 100000;
 
-    auto* bp1 = new BlockingPattern<UINT_T>("10\n01", n);
-    auto* bp2 = new BlockingPattern<UINT_T>("01\n10", n);
+    auto* bp1 = new BlockingPattern<UINT_T>("*0\n11", n);
+    auto* bp2 = new BlockingPattern<UINT_T>("10\n1*", n);
 
-    auto bp = new vector<BlockingPattern<UINT_T>*>();
-    bp->push_back(bp1);
-    bp->push_back(bp2);
+    blocking_patterns->push_back(bp1); n_clauses += bp1->n_clauses;
+    blocking_patterns->push_back(bp2); n_clauses += bp2->n_clauses;
 
-    auto* cg = new ClauseGenerator<UINT_T>(bp);
-    batch_size = batch_size < cg->n_clauses ? batch_size : cg->n_clauses;
+    batch_size = batch_size < n_clauses ? batch_size : n_clauses;
 
     auto clauses = new vector<ClauseArray*>();
     clauses->push_back(new ClauseArray());
 
     auto var_arr = new VariablesArray<UINT_T>(n * n);
-    auto satInstance = new SATInstance<UINT_T>(var_arr, 1);
-    bool isValid = false;
+    auto satInstance = new SATInstance<UINT_T>(var_arr, n_threads);
 
-    while (!isValid) {
-        isValid = true;
+    auto statistics = satInstance->solve(getEnumeratedClause, n_clauses, batch_size);
 
-        UINT_T global_clause_count = 0;
+    cout << "------------ STATISTICS -------------\n# Iterations\t= "
+            + to_string(statistics->n_iterations)
+            + "\n# Resamples\t= " + to_string(statistics->n_resamples);
 
-        while (global_clause_count < cg->n_clauses) {
-            UINT_T clause_count = 0;
-
-            while (clause_count < batch_size) {
-                auto clause = cg->yieldClause();
-                if (clause != nullptr) {
-                    clauses->at(0)->push_back(clause);
-
-                    clause_count++;
-                    global_clause_count++;
-                } else {
-                    exit(1);
-                }
-            }
-
-            satInstance->solve(clauses, true);
-
-            // Memory management
-            for (auto c : *clauses->at(0)) {
-                c->literals->clear();
-                delete c->literals;
-                delete c;
-            }
-
-            clauses->at(0)->clear();
-        }
-
-        // Verifying...
-        for (UINT_T i = 0; i < cg->n_clauses; i++) {
-            auto clause = cg->getEnumerateClause(i);
-            if (clause != nullptr) {
-                clauses->at(0)->push_back(clause);
-            } else {
-                exit(1);
-            }
-        }
-
-        isValid = isValid & satInstance->verify_validity(clauses);
-
-        // Memory management
-        for (auto c : *clauses->at(0)) {
-            c->literals->clear();
-            delete c->literals;
-            delete c;
-        }
-
-        clauses->at(0)->clear();
+    for (int t = 0; t < n_threads; t++) {
+        cout << "\n\tThread " + to_string(t+1) + ": " + to_string((statistics->n_thread_resamples).at(t));
     }
+
+    cout << "\n\nAvg. UNSAT MIS Size = " + to_string(statistics->avg_mis_size)
+            + "\n-------------------------------------\n\n";
 
     bits_to_bmp(var_arr, n, (char*) "./out.bmp");
 
     return 0;
+}
+
+Clause<UINT_T>* getEnumeratedClause(UINT_T idx, unsigned short int t_id) {
+    UINT_T offset = 0;
+
+    for (auto& blocking_pattern : *blocking_patterns) {
+        if ((idx - offset) < blocking_pattern->n_clauses) {
+            return new Clause<UINT_T>(blocking_pattern->getLiterals(idx - offset), t_id);
+        }
+
+        offset += blocking_pattern->n_clauses;
+    }
+
+    return nullptr;
 }
 
 byte* get_bmp_file_header() {
