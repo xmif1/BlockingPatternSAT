@@ -9,4 +9,4 @@ add_executable(BlockingPatternSAT main.cpp
         BlockingPattern/blocking_pattern.h)
 target_link_libraries(BlockingPatternSAT curses ALLLSatisfiabilitySolver)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Ofast -DNDEBUG") # to specify compiler optimisations add -Ofast -DNDEBUG
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Ofast -DNDEBUG")

@@ -1,33 +1,32 @@
+#include <fstream>
+#include <iostream>
+using namespace std;
 
 #include "BlockingPattern/blocking_pattern.h"
-
 #include "SATInstance.h"
 
-typedef unsigned int UINT_T;
+typedef uint64_t UINT_T;
 typedef SATInstance<UINT_T>::ClauseArray ClauseArray;
-typedef unsigned char byte;
+typedef uint8_t byte;
 
 void bits_to_bmp(VariablesArray<UINT_T>* data, UINT_T n, char* out);
 Clause<UINT_T>* getEnumeratedClause(UINT_T, unsigned short int);
+string get_mask(int h, int b);
 
 auto blocking_patterns = new vector<BlockingPattern<UINT_T>*>();
 
 int main() {
-    unsigned short int n_threads = 1;
-    UINT_T n = 64;
-    UINT_T n_clauses = 0;
-    UINT_T batch_size = 100000;
+    unsigned short int n_threads = 8;
 
-    auto* bp1 = new BlockingPattern<UINT_T>("*0\n11", n);
-    auto* bp2 = new BlockingPattern<UINT_T>("10\n1*", n);
+    UINT_T n = 50;
+    UINT_T n_clauses = 0;
+    UINT_T batch_size = 50000000;
+
+    auto* bp1 = new BlockingPattern<UINT_T>(get_mask(9, 8), n);
 
     blocking_patterns->push_back(bp1); n_clauses += bp1->n_clauses;
-    blocking_patterns->push_back(bp2); n_clauses += bp2->n_clauses;
 
     batch_size = batch_size < n_clauses ? batch_size : n_clauses;
-
-    auto clauses = new vector<ClauseArray*>();
-    clauses->push_back(new ClauseArray());
 
     auto var_arr = new VariablesArray<UINT_T>(n * n);
     auto satInstance = new SATInstance<UINT_T>(var_arr, n_threads);
@@ -45,7 +44,13 @@ int main() {
     cout << "\n\nAvg. UNSAT MIS Size = " + to_string(statistics->avg_mis_size)
             + "\n-------------------------------------\n\n";
 
-    bits_to_bmp(var_arr, n, (char*) "./out.bmp");
+    if (n < 256) {
+        bits_to_bmp(var_arr, n, (char*) "./out.bmp");
+    }
+
+    auto out_f = new ofstream("./sat.cnf");
+    satInstance->writeDIMACS(getEnumeratedClause, out_f);
+    out_f->close();
 
     return 0;
 }
@@ -62,6 +67,29 @@ Clause<UINT_T>* getEnumeratedClause(UINT_T idx, unsigned short int t_id) {
     }
 
     return nullptr;
+}
+
+string get_mask(int h, int b) {
+    string mask;
+    int offset = 0;
+
+    for (int i = 0; i < h; i++) {
+        for (int j = 0; j < h; j++) {
+            if (offset < b && j == offset) {
+                mask += "1";
+            } else {
+                mask += "0";
+            }
+        }
+
+        offset += 1;
+
+        if (i != h - 1) {
+            mask += "\n";
+        }
+    }
+
+    return mask;
 }
 
 byte* get_bmp_file_header() {
