@@ -1,5 +1,8 @@
+#include <cstring>
 #include <fstream>
 #include <iostream>
+#include <functional>
+
 using namespace std;
 
 #include "BlockingPattern/blocking_pattern.h"
