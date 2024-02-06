@@ -7,6 +7,6 @@ find_package(ALLLSatisfiabilitySolver CONFIG REQUIRED)
 
 add_executable(BlockingPatternSAT main.cpp
         BlockingPattern/blocking_pattern.h)
-target_link_libraries(BlockingPatternSAT curses ALLLSatisfiabilitySolver)
+target_link_libraries(BlockingPatternSAT ALLLSatisfiabilitySolver)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Ofast -DNDEBUG")
