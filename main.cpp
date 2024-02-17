@@ -31,7 +31,7 @@ int main(int argc, char *argv[]){
     int h = 10;
     int b = 9;
 
-    bool output = false;
+    bool generate = false;
 
     try {
         options_description desc{"Options"};
@@ -42,7 +42,7 @@ int main(int argc, char *argv[]){
                 ("dimension,n", value<UINT_T>()->required(), "Grid dimension")
                 ("mask_size,h", value<int>()->required(), "Mask dimension h x h")
                 ("diagonal,b", value<int>()->required(), "Number of black cells b <= h on the diagonal")
-                ("output,o", "Output instance as DIMACS CNF?");
+                ("generate,g", "Generate and output instance as DIMACS CNF (without solving)");
 
         variables_map vm;
         store(parse_command_line(argc, argv, desc), vm);
@@ -53,8 +53,8 @@ int main(int argc, char *argv[]){
         } else {
             notify(vm);
 
-            if(vm.count("output")){
-                output = true;
+            if(vm.count("generate")){
+                generate = true;
             }
 
             if(vm.count("parallel")){
@@ -97,24 +97,24 @@ int main(int argc, char *argv[]){
     auto var_arr = new VariablesArray<UINT_T>(n * n);
     auto satInstance = new SATInstance<UINT_T>(var_arr, n_threads);
 
-    auto statistics = satInstance->solve(getEnumeratedClause, n_clauses, batch_size);
-
-    cout << "------------ STATISTICS -------------\n# Iterations\t= "
-            + to_string(statistics->n_iterations)
-            + "\n# Resamples\t= " + to_string(statistics->n_resamples);
-
-    for (int t = 0; t < n_threads; t++) {
-        cout << "\n\tThread " + to_string(t+1) + ": " + to_string((statistics->n_thread_resamples).at(t));
-    }
-
-    cout << "\n\nAvg. UNSAT MIS Size = " + to_string(statistics->avg_mis_size)
-            + "\n-------------------------------------\n\n";
-
-    if (output) {
+    if (generate) {
         string f_name = "n" + to_string(n) + "_h" + to_string(h) + "_b" + to_string(b) + ".cnf";
         auto out_f = new ofstream(f_name);
         satInstance->writeDIMACS(getEnumeratedClause, out_f);
         out_f->close();
+    } else {
+        auto statistics = satInstance->solve(getEnumeratedClause, n_clauses, batch_size);
+
+        cout << "------------ STATISTICS -------------\n# Iterations\t= "
+                + to_string(statistics->n_iterations)
+                + "\n# Resamples\t= " + to_string(statistics->n_resamples);
+
+        for (int t = 0; t < n_threads; t++) {
+            cout << "\n\tThread " + to_string(t+1) + ": " + to_string((statistics->n_thread_resamples).at(t));
+        }
+
+        cout << "\n\nAvg. UNSAT MIS Size = " + to_string(statistics->avg_mis_size)
+                + "\n-------------------------------------\n\n";
     }
 
     return 0;
