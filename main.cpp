@@ -100,7 +100,7 @@ int main(int argc, char *argv[]){
     if (generate) {
         string f_name = "n" + to_string(n) + "_h" + to_string(h) + "_b" + to_string(b) + ".cnf";
         auto out_f = new ofstream(f_name);
-        satInstance->writeDIMACS(getEnumeratedClause, out_f);
+        satInstance->writeDIMACS(getEnumeratedClause, n_clauses, out_f);
         out_f->close();
     } else {
         auto statistics = satInstance->solve(getEnumeratedClause, n_clauses, batch_size);
